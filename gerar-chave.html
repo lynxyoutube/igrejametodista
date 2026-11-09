@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de Chave - Escala Igreja Metodista</title>
+<link rel="icon" href="logo.jpg">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #141414;
+    --panel-2: #1b1b1b;
+    --line: #2e2a1c;
+    --gold: #e0a820;
+    --gold-soft: #f2c94c;
+    --text: #f3ead2;
+    --muted: #9a917a;
+    --erro: #ef8a80;
+    --ok: #6ee7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 30px 16px 60px;
+    background-image: radial-gradient(ellipse at 50% -10%, rgba(224,168,32,.14), transparent 55%);
+    background-repeat: no-repeat;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.6);
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    color: var(--gold-soft);
+    text-align: center;
+  }
+  .sub {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+  }
+  .aviso-seguranca {
+    background: rgba(224,168,32,.08);
+    border: 1px solid rgba(224,168,32,.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    color: var(--gold-soft);
+  }
+  .campo {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--gold-soft);
+  }
+  .ajuda {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  input {
+    width: 100%;
+    font: inherit;
+    font-size: 15px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  input:focus {
+    outline: 2px solid var(--gold);
+    border-color: var(--gold);
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #111;
+    cursor: pointer;
+    margin-top: 26px;
+    transition: background .2s, opacity .2s;
+  }
+  .btn:hover { background: var(--gold-soft); }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .status {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+  }
+  .status.ok {
+    display: block;
+    background: rgba(110,231,183,.1);
+    border: 1px solid var(--ok);
+    color: var(--ok);
+  }
+  .status.erro {
+    display: block;
+    background: rgba(239,138,128,.1);
+    border: 1px solid var(--erro);
+    color: var(--erro);
+  }
+  .instrucoes {
+    margin-top: 32px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .instrucoes h3 {
+    color: var(--gold-soft);
+    font-size: 15px;
+    margin: 0 0 10px;
+  }
+  .instrucoes ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .instrucoes li {
+    margin-bottom: 8px;
+  }
+  code {
+    background: var(--panel-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--gold-soft);
+    font-size: 12px;
+  }
+  a { color: var(--gold-soft); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Criptografar Token (chave.json)</h1>
+    <p class="sub">Ferramenta local segura para gerar o arquivo de autenticação</p>
+
+    <div class="aviso-seguranca">
+      🔒 <strong>Privacidade Total:</strong> Todo o processo roda 100% no seu navegador usando a Web Crypto API (PBKDF2 com SHA-256 em 600.000 iterações + AES-GCM 256 bits). O seu token não é enviado para nenhum servidor e nem sai do seu computador.
+    </div>
+
+    <form id="formGerar">
+      <div class="campo">
+        <label for="token">Token do GitHub (Personal Access Token):</label>
+        <input type="password" id="token" required placeholder="github_pat_..." autocomplete="off">
+        <span class="ajuda">Fine-grained token com permissão "Contents: Read and write" no repositório <code>igrejametodista</code>.</span>
+      </div>
+
+      <div class="campo">
+        <label for="senha">Senha de Edição (para sua irmã):</label>
+        <input type="password" id="senha" required placeholder="Digite a senha desejada" autocomplete="new-password">
+        <span class="ajuda">Esta é a senha que sua irmã digitará no site para liberar os campos e salvar.</span>
+      </div>
+
+      <div class="campo">
+        <label for="confirmaSenha">Confirme a Senha:</label>
+        <input type="password" id="confirmaSenha" required placeholder="Digite a senha novamente" autocomplete="new-password">
+      </div>
+
+      <button type="submit" class="btn" id="btnGerar">Gerar e Baixar chave.json</button>
+      <div id="status" class="status"></div>
+    </form>
+
+    <div class="instrucoes">
+      <h3>Como obter o token fine-grained no GitHub:</h3>
+      <ol>
+        <li>No GitHub, clique na sua foto de perfil &rarr; <strong>Settings</strong> &rarr; <strong>Developer Settings</strong> (no final da barra lateral).</li>
+        <li>Em <strong>Personal access tokens</strong>, selecione <strong>Fine-grained tokens</strong> e clique em <strong>Generate new token</strong>.</li>
+        <li>Defina um nome (ex: <code>Escala Igreja</code>) e uma data de validade (Expiration).</li>
+        <li>Em <strong>Repository access</strong>, selecione <strong>Only select repositories</strong> e escolha <code>igrejametodista</code>.</li>
+        <li>Em <strong>Permissions</strong> &rarr; <strong>Repository permissions</strong>, encontre <strong>Contents</strong> e selecione <strong>Read and write</strong>.</li>
+        <li>Clique em <strong>Generate token</strong> e cole o token aqui em cima.</li>
+      </ol>
+      <p style="margin-top:12px;">Depois de gerar o <code>chave.json</code>, mova o arquivo para a raiz da pasta do site e faça o <code>git push</code>.</p>
+      <p style="text-align: center; margin-top: 16px;"><a href="index.html">&larr; Voltar para a Escala</a></p>
+    </div>
+  </div>
+
+<script>
+(function() {
+  const form = document.getElementById("formGerar");
+  const elToken = document.getElementById("token");
+  const elSenha = document.getElementById("senha");
+  const elConfirma = document.getElementById("confirmaSenha");
+  const elStatus = document.getElementById("status");
+  const btn = document.getElementById("btnGerar");
+
+  function bufferToBase64(buf) {
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  async function derivarChave(senha, salBytes) {
+    const enc = new TextEncoder();
+    const senhaKey = await window.crypto.subtle.importKey(
+      "raw",
+      enc.encode(senha),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salBytes,
+        iterations: 600000,
+        hash: "SHA-256"
+      },
+      senhaKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function criptografarToken(token, senha) {
+    const sal = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const key = await derivarChave(senha, sal);
+    const enc = new TextEncoder();
+    const dado = await window.crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      enc.encode(token)
+    );
+    return {
+      sal: bufferToBase64(sal),
+      iv: bufferToBase64(iv),
+      dado: bufferToBase64(dado)
+    };
+  }
+
+  function baixarJson(obj, nomeArquivo) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  form.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const token = elToken.value.trim();
+    const senha = elSenha.value;
+    const confirma = elConfirma.value;
+
+    if (!token) {
+      elStatus.className = "status erro";
+      elStatus.textContent = "Por favor, informe o token do GitHub.";
+      return;
+    }
+
+    if (!senha) {
+      elStatus.className = "status erro";
+      elStatus.textContent = "Por favor, defina uma senha.";
+      return;
+    }
+
+    if (senha !== confirma) {
+      elStatus.className = "status erro";
+      elStatus.textContent = "As senhas não coincidem. Digite com atenção.";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Criptografando com PBKDF2 (600.000 iterações)...";
+    elStatus.style.display = "none";
+
+    try {
+      const pacote = await criptografarToken(token, senha);
+      baixarJson(pacote, "chave.json");
+
+      elStatus.className = "status ok";
+      elStatus.innerHTML = "<strong>chave.json gerado e baixado com sucesso!</strong><br>Coloque o arquivo <code>chave.json</code> na pasta raiz do site (ao lado de <code>index.html</code>) e faça o commit/push no Git.";
+    } catch (err) {
+      elStatus.className = "status erro";
+      elStatus.textContent = "Erro ao criptografar: " + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Gerar e Baixar chave.json";
+    }
+  });
+})();
+</script>
+</body>
+</html>

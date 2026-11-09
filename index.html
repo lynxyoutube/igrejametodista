@@ -15,6 +15,8 @@
     --gold-soft: #f2c94c;
     --text: #f3ead2;
     --muted: #9a917a;
+    --erro: #ef8a80;
+    --ok: #6ee7b7;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -60,13 +62,76 @@
   main {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 22px 16px 48px;
+    padding: 20px 16px 48px;
+  }
+  .barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
+  }
+  .barra-acoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+  }
+  .estado {
+    font-size: 13px;
+    color: var(--muted);
+    transition: color .2s;
+  }
+  .estado.ok { color: var(--gold-soft); font-weight: 600; }
+  .estado.erro { color: var(--erro); font-weight: 600; }
+
+  .btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #111;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background .2s, opacity .2s, transform .1s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:hover { background: var(--gold-soft); }
+  .btn:active { transform: scale(.98); }
+  .btn:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  .btn.sec {
+    background: transparent;
+    color: var(--gold-soft);
+    border-color: rgba(224,168,32,.4);
+  }
+  .btn.sec:hover {
+    background: rgba(224,168,32,.1);
+    border-color: var(--gold);
+  }
+  .btn:disabled {
+    opacity: .55;
+    cursor: wait;
+    pointer-events: none;
   }
   .hint {
     text-align: center;
     color: var(--muted);
     font-size: 13px;
     margin: 0 0 14px;
+    transition: color .2s;
+  }
+  .hint.editando {
+    color: var(--gold-soft);
+    font-weight: 500;
   }
   .wrap {
     overflow-x: auto;
@@ -138,17 +203,83 @@
     line-height: 1.35;
     text-align: center;
     overflow: hidden;
+    transition: background .15s;
   }
   textarea::placeholder { color: #4a4433; }
   textarea:focus { background: rgba(224,168,32,.08); box-shadow: inset 0 0 0 2px var(--gold); }
+  textarea[readonly] {
+    cursor: default;
+    user-select: text;
+  }
+  textarea[readonly]:focus {
+    background: transparent;
+    box-shadow: none;
+  }
   td.next textarea { background: rgba(224,168,32,.04); }
 
+  dialog {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--gold);
+    border-radius: 18px;
+    padding: 24px;
+    width: min(92vw, 380px);
+    box-shadow: 0 16px 50px rgba(0,0,0,.85);
+  }
+  dialog::backdrop {
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(3px);
+  }
+  dialog h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: var(--gold-soft);
+  }
+  dialog p {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  dialog input {
+    width: 100%;
+    font: inherit;
+    font-size: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+  }
+  dialog input:focus {
+    outline: 2px solid var(--gold);
+    border-color: var(--gold);
+  }
+  dialog .msg-erro {
+    min-height: 20px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--erro);
+    font-weight: 500;
+  }
+  dialog .acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
   footer {
-    text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 0 16px 32px;
   }
   @media (max-width: 600px) {
     tbody th { width: 112px; min-width: 112px; font-size: 11px; padding: 14px 10px; }
     header { padding-top: 28px; }
+    .barra { flex-direction: column; align-items: stretch; gap: 8px; }
+    .barra-acoes { margin-left: 0; justify-content: flex-end; }
   }
 </style>
 </head>
@@ -161,7 +292,14 @@
   </header>
 
   <main>
-    <p class="hint">Toque em um campo para escrever os nomes. Fica salvo automaticamente.</p>
+    <div class="barra">
+      <span class="estado" id="estado" role="status" aria-live="polite"></span>
+      <div class="barra-acoes">
+        <button type="button" class="btn" id="btnSalvar" style="display: none;">Salvar escala</button>
+        <button type="button" class="btn sec" id="btnModo">Editar escala</button>
+      </div>
+    </div>
+    <p class="hint" id="aviso">Carregando a escala…</p>
     <div class="wrap">
       <table id="tabela" aria-label="Escala de domingos">
         <thead><tr id="cabecalho"></tr></thead>
@@ -172,27 +310,55 @@
 
   <footer>Os domingos avançam sozinhos: passou o culto, entra o próximo no fim da lista.</footer>
 
+  <dialog id="dlgSenha" aria-labelledby="dlgTitulo">
+    <form id="formSenha">
+      <h2 id="dlgTitulo">Entrar para editar</h2>
+      <p>Digite a senha de edição da escala:</p>
+      <input type="password" id="campoSenha" autocomplete="current-password" aria-label="Senha de edição" required autofocus>
+      <p class="msg-erro" id="erroSenha" role="alert"></p>
+      <div class="acoes">
+        <button type="button" class="btn sec" id="btnCancelar">Cancelar</button>
+        <button type="submit" class="btn" id="btnEntrar">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
 <script>
 (function () {
   var CATEGORIAS = ["Computador", "Sala Infantil", "Ajudantes", "Mídia"];
   var QTD_DOMINGOS = 7;
-  var CHAVE = "igreja-metodista-escala-v1";
+  var GITHUB_OWNER = "lynxyoutube";
+  var GITHUB_REPO = "igrejametodista";
+  var GITHUB_FILE_PATH = "dados.json";
+  var GITHUB_BRANCH = "main";
+  var SESSAO_TOKEN_KEY = "igreja_metodista_token_sessao";
 
-  function carregar() {
-    try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch (e) { return {}; }
-  }
-  function salvar(dados) {
-    try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch (e) {}
-  }
-  var dados = carregar();
+  var dados = {};
+  var tokenAtual = "";
+  var shaAtual = null;
+  var editando = false;
+  var carregouUmaVez = false;
+  var salvando = false;
+  var alteracoesPendentes = false;
 
+  var elEstado = document.getElementById("estado");
+  var elAviso = document.getElementById("aviso");
+  var btnModo = document.getElementById("btnModo");
+  var btnSalvar = document.getElementById("btnSalvar");
+  var dlg = document.getElementById("dlgSenha");
+  var formSenha = document.getElementById("formSenha");
+  var campoSenha = document.getElementById("campoSenha");
+  var erroSenha = document.getElementById("erroSenha");
+  var btnEntrar = document.getElementById("btnEntrar");
+  var btnCancelar = document.getElementById("btnCancelar");
+
+  // ---------- Utilitários de Data ----------
   function iso(d) {
     var m = String(d.getMonth() + 1).padStart(2, "0");
     var day = String(d.getDate()).padStart(2, "0");
     return d.getFullYear() + "-" + m + "-" + day;
   }
 
-  // primeiro domingo: hoje, se for domingo; senão o próximo
   function primeiroDomingo() {
     var h = new Date();
     h.setHours(12, 0, 0, 0);
@@ -209,6 +375,7 @@
     domingos.push(d);
   }
 
+  // ---------- Montagem da Tabela ----------
   var fmtDia = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
   var cab = document.getElementById("cabecalho");
   var corpo = document.getElementById("corpo");
@@ -254,35 +421,423 @@
       if (idx === 0) td.className = "next";
       var t = document.createElement("textarea");
       t.rows = 2;
+      t.readOnly = true;
       t.placeholder = "—";
       t.setAttribute("aria-label", cat + " — " + iso(d));
       var key = iso(d) + "|" + cat;
-      t.value = dados[key] || "";
+      t.dataset.key = key;
+
       t.addEventListener("input", function () {
-        if (t.value.trim()) dados[key] = t.value; else delete dados[key];
-        salvar(dados);
+        if (!editando) return;
+        dados[key] = t.value;
+        alteracoesPendentes = true;
         ajustar(t);
+        mostrarEstado("Alterações não salvas", "");
       });
+
       td.appendChild(t);
       tr.appendChild(td);
     });
     corpo.appendChild(tr);
   });
 
-  // limpa registros de domingos que já passaram
-  var validas = {};
-  domingos.forEach(function (d) { validas[iso(d)] = true; });
-  var mudou = false;
-  Object.keys(dados).forEach(function (k) {
-    if (!validas[k.split("|")[0]] && k.split("|")[0] < iso(domingos[0])) {
-      delete dados[k]; mudou = true;
+  // ---------- Funções Criptográficas (Web Crypto API) ----------
+  function base64ToBuffer(base64) {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  function utf8ToBase64(str) {
+    var bytes = new TextEncoder().encode(str);
+    var binary = "";
+    for (var i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  function base64ToUtf8(base64) {
+    var binary = atob(base64.replace(/\s/g, ""));
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  }
+
+  async function derivarChave(senha, salBytes) {
+    var enc = new TextEncoder();
+    var senhaKey = await window.crypto.subtle.importKey(
+      "raw",
+      enc.encode(senha),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salBytes,
+        iterations: 600000,
+        hash: "SHA-256"
+      },
+      senhaKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function descriptografarToken(senha, pacote) {
+    var sal = base64ToBuffer(pacote.sal);
+    var iv = base64ToBuffer(pacote.iv);
+    var dado = base64ToBuffer(pacote.dado);
+    var key = await derivarChave(senha, sal);
+    var dec = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      dado
+    );
+    return new TextDecoder().decode(dec);
+  }
+
+  // ---------- Interface ----------
+  function mostrarEstado(texto, tipo) {
+    elEstado.textContent = texto;
+    elEstado.className = "estado" + (tipo ? " " + tipo : "");
+  }
+
+  function preencher() {
+    document.querySelectorAll("textarea").forEach(function (t) {
+      if (editando && document.activeElement === t) return;
+      t.value = dados[t.dataset.key] || "";
+      ajustar(t);
+    });
+  }
+
+  function aplicarModo() {
+    document.querySelectorAll("textarea").forEach(function (t) {
+      t.readOnly = !editando;
+    });
+
+    if (editando) {
+      btnModo.textContent = "Sair da edição";
+      btnModo.className = "btn sec";
+      btnSalvar.style.display = "inline-flex";
+      elAviso.textContent = "Modo edição: altere os nomes na tabela e clique em Salvar escala.";
+      elAviso.className = "hint editando";
+    } else {
+      btnModo.textContent = "Editar escala";
+      btnModo.className = "btn sec";
+      btnSalvar.style.display = "none";
+      elAviso.textContent = "Visualização da escala de domingos.";
+      elAviso.className = "hint";
+    }
+  }
+
+  // ---------- Comunicação e Dados ----------
+  async function carregarDadosPublicos() {
+    try {
+      var resp = await fetch("dados.json?v=" + Date.now(), { cache: "no-store" });
+      if (!resp.ok) {
+        throw new Error("HTTP " + resp.status);
+      }
+      dados = await resp.json();
+      preencher();
+      carregouUmaVez = true;
+      if (!editando) {
+        mostrarEstado("");
+        aplicarModo();
+      }
+    } catch (e) {
+      console.warn("Falha ao carregar dados.json:", e);
+      if (!carregouUmaVez) {
+        elAviso.textContent = "Não foi possível carregar a escala agora. Verifique sua conexão.";
+        mostrarEstado("Sem conexão", "erro");
+      }
+    }
+  }
+
+  async function obterShaMaisRecente() {
+    if (!tokenAtual) return;
+    var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + GITHUB_FILE_PATH + "?ref=" + GITHUB_BRANCH;
+    try {
+      var r = await fetch(url, {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": "Bearer " + tokenAtual.trim(),
+          "X-GitHub-Api-Version": "2022-11-28"
+        },
+        cache: "no-store"
+      });
+      if (r.ok) {
+        var info = await r.json();
+        shaAtual = info.sha;
+        if (info.content) {
+          try {
+            var decoded = base64ToUtf8(info.content);
+            dados = JSON.parse(decoded);
+            preencher();
+          } catch (errJson) {
+            console.error("Erro ao interpretar JSON vindo do GitHub:", errJson);
+          }
+        }
+      } else if (r.status === 404) {
+        shaAtual = null; // arquivo ainda não existe no repo
+      } else if (r.status === 401 || r.status === 403) {
+        throw new Error("Token sem permissão ou expirado.");
+      }
+    } catch (err) {
+      console.error("Erro ao buscar sha do GitHub:", err);
+      throw err;
+    }
+  }
+
+  function limparAntigos() {
+    var hoje = iso(domingos[0]);
+    Object.keys(dados).forEach(function (k) {
+      if (k.split("|")[0] < hoje) {
+        delete dados[k];
+      }
+    });
+  }
+
+  async function salvarPelaApi() {
+    if (!editando || !tokenAtual || salvando) return;
+
+    salvando = true;
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = "Salvando…";
+    mostrarEstado("Gravando no GitHub…");
+
+    try {
+      limparAntigos();
+
+      // Busca sha mais recente para evitar conflito se não tivermos
+      if (!shaAtual) {
+        await obterShaMaisRecente();
+      }
+
+      var corpoEnvio = {
+        message: "Atualiza escala de domingos",
+        content: utf8ToBase64(JSON.stringify(dados, null, 2)),
+        branch: GITHUB_BRANCH
+      };
+
+      if (shaAtual) {
+        corpoEnvio.sha = shaAtual;
+      }
+
+      var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + GITHUB_FILE_PATH;
+      var resp = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": "Bearer " + tokenAtual.trim(),
+          "Content-Type": "application/json",
+          "X-GitHub-Api-Version": "2022-11-28"
+        },
+        body: JSON.stringify(corpoEnvio)
+      });
+
+      var resultado = await resp.json().catch(function() { return {}; });
+
+      if (resp.status === 200 || resp.status === 201) {
+        if (resultado.content && resultado.content.sha) {
+          shaAtual = resultado.content.sha;
+        }
+        alteracoesPendentes = false;
+        mostrarEstado("Salvo! Aparece para todos em cerca de 1 minuto.", "ok");
+      } else if (resp.status === 409) {
+        // Conflito de SHA
+        mostrarEstado("Conflito ao salvar: a escala foi atualizada externamente. Recarregando…", "erro");
+        await obterShaMaisRecente();
+        alert("A escala foi alterada em outro local recentemente. Os dados mais novos foram recarregados. Verifique e salve novamente.");
+      } else if (resp.status === 401 || resp.status === 403) {
+        mostrarEstado("Token expirado ou sem permissão de gravação.", "erro");
+        alert("O token configurado não tem permissão para gravar no repositório ou expirou.");
+      } else {
+        var msg = (resultado && resultado.message) ? resultado.message : ("Erro HTTP " + resp.status);
+        mostrarEstado("Erro ao salvar: " + msg, "erro");
+      }
+    } catch (e) {
+      if (!navigator.onLine) {
+        mostrarEstado("Sem internet. Conecte-se e tente novamente.", "erro");
+      } else {
+        mostrarEstado("Erro de conexão ao salvar: " + e.message, "erro");
+      }
+    } finally {
+      salvando = false;
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = "Salvar escala";
+    }
+  }
+
+  // ---------- Diálogo de Senha e Autenticação ----------
+  function abrirDialogo() {
+    erroSenha.textContent = "";
+    campoSenha.value = "";
+    if (typeof dlg.showModal === "function") {
+      dlg.showModal();
+    } else {
+      dlg.setAttribute("open", "");
+    }
+    campoSenha.focus();
+  }
+
+  function fecharDialogo() {
+    if (typeof dlg.close === "function") {
+      dlg.close();
+    } else {
+      dlg.removeAttribute("open");
+    }
+    campoSenha.value = "";
+    erroSenha.textContent = "";
+  }
+
+  async function autenticarComSenha(senhaDigitada) {
+    btnEntrar.disabled = true;
+    erroSenha.textContent = "";
+
+    try {
+      var resp = await fetch("chave.json?v=" + Date.now(), { cache: "no-store" });
+      if (!resp.ok) {
+        if (resp.status === 404) {
+          throw new Error("Arquivo chave.json não encontrado no repositório. Gere a chave primeiro.");
+        }
+        throw new Error("Erro ao buscar chave.json (HTTP " + resp.status + ").");
+      }
+
+      var pacote = await resp.json();
+      if (!pacote.sal || !pacote.iv || !pacote.dado) {
+        throw new Error("Formato inválido do arquivo chave.json.");
+      }
+
+      var tokenDecriptado;
+      try {
+        tokenDecriptado = await descriptografarToken(senhaDigitada, pacote);
+      } catch (errDecrypt) {
+        throw new Error("Senha errada.");
+      }
+
+      if (!tokenDecriptado || !tokenDecriptado.trim()) {
+        throw new Error("Senha errada.");
+      }
+
+      tokenAtual = tokenDecriptado.trim();
+      try {
+        sessionStorage.setItem(SESSAO_TOKEN_KEY, tokenAtual);
+      } catch (e) {}
+
+      fecharDialogo();
+
+      // Ativa modo edição
+      editando = true;
+      aplicarModo();
+      mostrarEstado("Obtendo dados mais recentes do GitHub…");
+
+      try {
+        await obterShaMaisRecente();
+        mostrarEstado("Modo edição ativado.", "ok");
+      } catch (eRepo) {
+        mostrarEstado("Atenção: " + eRepo.message, "erro");
+      }
+    } catch (e) {
+      erroSenha.textContent = e.message;
+      campoSenha.select();
+    } finally {
+      btnEntrar.disabled = false;
+    }
+  }
+
+  function sairEdicao() {
+    if (alteracoesPendentes) {
+      if (!confirm("Você tem alterações não salvas. Deseja realmente sair sem salvar?")) {
+        return;
+      }
+    }
+    tokenAtual = "";
+    shaAtual = null;
+    editando = false;
+    alteracoesPendentes = false;
+    try {
+      sessionStorage.removeItem(SESSAO_TOKEN_KEY);
+    } catch (e) {}
+    aplicarModo();
+    mostrarEstado("");
+    carregarDadosPublicos();
+  }
+
+  // ---------- Eventos ----------
+  btnModo.addEventListener("click", function () {
+    if (editando) {
+      sairEdicao();
+    } else {
+      abrirDialogo();
     }
   });
-  if (mudou) salvar(dados);
 
-  document.querySelectorAll("textarea").forEach(ajustar);
+  btnSalvar.addEventListener("click", function () {
+    salvarPelaApi();
+  });
+
+  btnCancelar.addEventListener("click", fecharDialogo);
+
+  formSenha.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var senhaDigitada = campoSenha.value;
+    if (!senhaDigitada) return;
+    autenticarComSenha(senhaDigitada);
+  });
+
+  // Fecha dialog ao clicar no backdrop
+  dlg.addEventListener("click", function (e) {
+    if (e.target === dlg) {
+      fecharDialogo();
+    }
+  });
+
   window.addEventListener("resize", function () {
     document.querySelectorAll("textarea").forEach(ajustar);
+  });
+
+  window.addEventListener("beforeunload", function (e) {
+    if (editando && alteracoesPendentes) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+
+  // ---------- Inicialização ----------
+  var tokenSalvo = "";
+  try {
+    tokenSalvo = sessionStorage.getItem(SESSAO_TOKEN_KEY) || "";
+  } catch (e) {}
+
+  carregarDadosPublicos().then(function () {
+    if (tokenSalvo) {
+      tokenAtual = tokenSalvo;
+      editando = true;
+      aplicarModo();
+      obterShaMaisRecente().catch(function() {});
+    }
+  });
+
+  // Atualização periódica em modo leitura (a cada 2 minutos)
+  setInterval(function () {
+    if (!editando && !document.hidden) {
+      carregarDadosPublicos();
+    }
+  }, 120000);
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && !editando) {
+      carregarDadosPublicos();
+    }
   });
 })();
 </script>
