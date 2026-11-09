@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Igreja Metodista</title>
+<link rel="icon" href="logo.jpg">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #141414;
+    --panel-2: #1b1b1b;
+    --line: #2e2a1c;
+    --gold: #e0a820;
+    --gold-soft: #f2c94c;
+    --text: #f3ead2;
+    --muted: #9a917a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 50% -10%, rgba(224,168,32,.14), transparent 55%);
+    background-repeat: no-repeat;
+  }
+  header {
+    text-align: center;
+    padding: 40px 16px 8px;
+  }
+  .logo {
+    width: clamp(150px, 34vw, 230px);
+    height: auto;
+    border-radius: 28px;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 0 6px rgba(224,168,32,.12), 0 18px 50px rgba(224,168,32,.25);
+    display: block;
+    margin: 0 auto;
+  }
+  h1 {
+    margin: 22px 0 4px;
+    font-size: clamp(28px, 6vw, 42px);
+    letter-spacing: .04em;
+    color: var(--gold-soft);
+    font-weight: 700;
+  }
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .rule {
+    width: 90px; height: 2px; margin: 18px auto 0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 22px 16px 48px;
+  }
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 14px;
+  }
+  .wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--panel);
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    min-width: 980px;
+  }
+  th, td {
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    padding: 0;
+    vertical-align: top;
+  }
+  th:last-child, td:last-child { border-right: 0; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+
+  thead th {
+    background: var(--panel-2);
+    padding: 14px 8px;
+    text-align: center;
+    font-weight: 600;
+    position: sticky; top: 0;
+  }
+  thead th .d { display: block; font-size: 20px; color: var(--gold-soft); }
+  thead th .w { display: block; font-size: 11px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: 2px; }
+  thead th.next { background: linear-gradient(180deg, #2a2108, #1b1608); }
+  thead th.next .w { color: var(--gold); }
+  .badge {
+    display: inline-block; margin-top: 6px; padding: 2px 8px;
+    font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    color: #111; background: var(--gold); border-radius: 999px; font-weight: 700;
+  }
+
+  tbody th {
+    background: var(--panel-2);
+    color: var(--gold);
+    text-align: left;
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 16px 14px;
+    width: 150px;
+    min-width: 150px;
+  }
+  thead th:first-child, tbody th {
+    position: sticky; left: 0; z-index: 2;
+  }
+  thead th:first-child { z-index: 3; }
+
+  textarea {
+    display: block;
+    width: 100%;
+    min-height: 74px;
+    resize: none;
+    background: transparent;
+    color: var(--text);
+    border: 0;
+    outline: none;
+    padding: 12px 10px;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.35;
+    text-align: center;
+    overflow: hidden;
+  }
+  textarea::placeholder { color: #4a4433; }
+  textarea:focus { background: rgba(224,168,32,.08); box-shadow: inset 0 0 0 2px var(--gold); }
+  td.next textarea { background: rgba(224,168,32,.04); }
+
+  footer {
+    text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 32px;
+  }
+  @media (max-width: 600px) {
+    tbody th { width: 112px; min-width: 112px; font-size: 11px; padding: 14px 10px; }
+    header { padding-top: 28px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="logo.jpg" alt="Logo Igreja Metodista">
+    <h1>Igreja Metodista</h1>
+    <p class="sub">Escala dos cultos de domingo</p>
+    <div class="rule"></div>
+  </header>
+
+  <main>
+    <p class="hint">Toque em um campo para escrever os nomes. Fica salvo automaticamente.</p>
+    <div class="wrap">
+      <table id="tabela" aria-label="Escala de domingos">
+        <thead><tr id="cabecalho"></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>Os domingos avançam sozinhos: passou o culto, entra o próximo no fim da lista.</footer>
+
+<script>
+(function () {
+  var CATEGORIAS = ["Computador", "Sala Infantil", "Ajudantes", "Mídia"];
+  var QTD_DOMINGOS = 7;
+  var CHAVE = "igreja-metodista-escala-v1";
+
+  function carregar() {
+    try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch (e) { return {}; }
+  }
+  function salvar(dados) {
+    try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch (e) {}
+  }
+  var dados = carregar();
+
+  function iso(d) {
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  // primeiro domingo: hoje, se for domingo; senão o próximo
+  function primeiroDomingo() {
+    var h = new Date();
+    h.setHours(12, 0, 0, 0);
+    var falta = (7 - h.getDay()) % 7;
+    h.setDate(h.getDate() + falta);
+    return h;
+  }
+
+  var domingos = [];
+  var base = primeiroDomingo();
+  for (var i = 0; i < QTD_DOMINGOS; i++) {
+    var d = new Date(base);
+    d.setDate(base.getDate() + i * 7);
+    domingos.push(d);
+  }
+
+  var fmtDia = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
+  var cab = document.getElementById("cabecalho");
+  var corpo = document.getElementById("corpo");
+
+  var vazio = document.createElement("th");
+  vazio.textContent = "";
+  cab.appendChild(vazio);
+
+  domingos.forEach(function (d, idx) {
+    var th = document.createElement("th");
+    if (idx === 0) th.className = "next";
+    var dia = document.createElement("span");
+    dia.className = "d";
+    dia.textContent = fmtDia.format(d).replace(".", "");
+    var w = document.createElement("span");
+    w.className = "w";
+    w.textContent = "Domingo";
+    th.appendChild(dia);
+    th.appendChild(w);
+    if (idx === 0) {
+      var b = document.createElement("span");
+      b.className = "badge";
+      b.textContent = (new Date().getDay() === 0) ? "Hoje" : "Próximo";
+      th.appendChild(b);
+    }
+    cab.appendChild(th);
+  });
+
+  function ajustar(t) {
+    t.style.height = "auto";
+    t.style.height = Math.max(74, t.scrollHeight) + "px";
+  }
+
+  CATEGORIAS.forEach(function (cat) {
+    var tr = document.createElement("tr");
+    var th = document.createElement("th");
+    th.scope = "row";
+    th.textContent = cat;
+    tr.appendChild(th);
+
+    domingos.forEach(function (d, idx) {
+      var td = document.createElement("td");
+      if (idx === 0) td.className = "next";
+      var t = document.createElement("textarea");
+      t.rows = 2;
+      t.placeholder = "—";
+      t.setAttribute("aria-label", cat + " — " + iso(d));
+      var key = iso(d) + "|" + cat;
+      t.value = dados[key] || "";
+      t.addEventListener("input", function () {
+        if (t.value.trim()) dados[key] = t.value; else delete dados[key];
+        salvar(dados);
+        ajustar(t);
+      });
+      td.appendChild(t);
+      tr.appendChild(td);
+    });
+    corpo.appendChild(tr);
+  });
+
+  // limpa registros de domingos que já passaram
+  var validas = {};
+  domingos.forEach(function (d) { validas[iso(d)] = true; });
+  var mudou = false;
+  Object.keys(dados).forEach(function (k) {
+    if (!validas[k.split("|")[0]] && k.split("|")[0] < iso(domingos[0])) {
+      delete dados[k]; mudou = true;
+    }
+  });
+  if (mudou) salvar(dados);
+
+  document.querySelectorAll("textarea").forEach(ajustar);
+  window.addEventListener("resize", function () {
+    document.querySelectorAll("textarea").forEach(ajustar);
+  });
+})();
+</script>
+</body>
+</html>
